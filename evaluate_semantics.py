@@ -155,7 +155,7 @@ if __name__ == '__main__':
   for sequence in test_sequences:
     sequence = '{0:02d}'.format(int(sequence))
     pred_paths = os.path.join(FLAGS.predictions, "sequences",
-                              sequence, "predictions")
+                              sequence, "predictions_dummy_best")
     # populate the label names
     seq_pred_names = [os.path.join(dp, f) for dp, dn, fn in os.walk(
         os.path.expanduser(pred_paths)) for f in fn if ".label" in f]
@@ -163,16 +163,30 @@ if __name__ == '__main__':
     pred_names.extend(seq_pred_names)
   # print(pred_names)
 
+    # get uncertainty scores paths
+    scores_names = []
+    for sequence in test_sequences:
+        sequence = '{0:02d}'.format(int(sequence))
+        scores_paths = os.path.join(FLAGS.predictions, "sequences",
+                                  sequence, "scores_softmax_dummy_best")
+        # populate the label names
+        seq_scores_names = [os.path.join(dp, f) for dp, dn, fn in os.walk(
+            os.path.expanduser(scores_paths)) for f in fn if ".label" in f]
+        seq_scores_names.sort()
+        scores_names.extend(seq_scores_names)
+    # print(scores_names)
+
   # check that I have the same number of files
   # print("labels: ", len(label_names))
   # print("predictions: ", len(pred_names))
   assert(len(label_names) == len(pred_names))
+  assert(len(label_names) == len(scores_names))
 
   progress = 10
   count = 0
   print("Evaluating sequences: ", end="", flush=True)
   # open each file, get the tensor, and make the iou comparison
-  for label_file, pred_file in zip(label_names, pred_names):
+  for label_file, pred_file, scores_file in zip(label_names, pred_names, scores_names):
     count += 1
     if 100 * count / len(label_names) > progress:
       print("{:d}% ".format(progress), end="", flush=True)
@@ -196,12 +210,21 @@ if __name__ == '__main__':
       pred = pred[:FLAGS.limit]  # limit to desired length
     pred = remap_lut[pred]       # remap to xentropy format
 
+    # open uncertainty scores
+    scores = np.fromfile(scores_file, dtype=np.float32)
+    scores = scores.reshape((-1))  # reshape to vector
+    # pred = pred & 0xFFFF  # get lower half for semantics
+    # if FLAGS.limit is not None:
+    #     scores = scores[:FLAGS.limit]  # limit to desired length
+
     # add single scan to evaluation
-    evaluator.addBatch(pred, label)
+    evaluator.addBatch(pred, label, scores)
 
   # when I am done, print the evaluation
   m_accuracy = evaluator.getacc()
   m_jaccard, class_jaccard = evaluator.getIoU()
+  print(evaluator.conf_matrix)
+  evaluator.get_unknown_indices()
 
   print('Validation set:\n'
         'Acc avg {m_accuracy:.3f}\n'

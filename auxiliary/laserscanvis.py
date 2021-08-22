@@ -6,17 +6,19 @@ from vispy.scene import visuals, SceneCanvas
 from vispy.gloo.util import _screenshot
 import numpy as np
 from matplotlib import pyplot as plt
+from PIL import Image
 from auxiliary.laserscan import LaserScan, SemLaserScan
 
 
 class LaserScanVis:
   """Class that creates and handles a visualizer for a pointcloud"""
 
-  def __init__(self, scan, scan_names, label_names, offset=0,
+  def __init__(self, scan, scan_names, label_names, uncertainty_names, offset=0,
                semantics=True, instances=False):
     self.scan = scan
     self.scan_names = scan_names
     self.label_names = label_names
+    self.uncertainty_names = uncertainty_names
     self.offset = offset
     self.total = len(self.scan_names)
     self.semantics = semantics
@@ -36,7 +38,7 @@ class LaserScanVis:
     self.action = "no"  # no, next, back, quit are the possibilities
 
     # new canvas prepared for visualizing data
-    self.canvas = SceneCanvas(keys='interactive', show=True, bgcolor='white')
+    self.canvas = SceneCanvas(keys='interactive', show=True, bgcolor='white', size=(800*1, 600*1), dpi=600)
     # interface (n next, b back, q quit, very simple)
     self.canvas.events.key_press.connect(self.key_press)
     self.canvas.events.draw.connect(self.draw)
@@ -129,6 +131,10 @@ class LaserScanVis:
   def update_scan(self):
     # first open data
     self.scan.open_scan(self.scan_names[self.offset])
+
+    if self.uncertainty_names is not None:
+      self.scan.open_uncertainty(self.uncertainty_names[self.offset])
+
     if self.semantics:
       self.scan.open_label(self.label_names[self.offset])
       self.scan.colorize()
@@ -152,13 +158,21 @@ class LaserScanVis:
                      255).astype(np.uint8)
     viridis_map = self.get_mpl_colormap("viridis")
     viridis_colors = viridis_map[viridis_range]
-    self.scan_vis.set_data(self.scan.points,
-                           face_color=viridis_colors[..., ::-1],
-                           edge_color=viridis_colors[..., ::-1],
+    self.scan_vis.antialias = 0
+    if self.uncertainty_names is not None:
+      self.scan_vis.set_data(self.scan.points,
+                           face_color=self.scan.uncertainty_color[..., ::-1],
+                           edge_color=self.scan.uncertainty_color[..., ::-1],
                            size=1)
+    else:
+      self.scan_vis.set_data(self.scan.points,
+                             face_color=viridis_colors[..., ::-1],
+                             edge_color=viridis_colors[..., ::-1],
+                             size=1)
 
     # plot semantics
     if self.semantics:
+      self.sem_vis.antialias = 0
       self.sem_vis.set_data(self.scan.points,
                             face_color=self.scan.sem_label_color[..., ::-1],
                             edge_color=self.scan.sem_label_color[..., ::-1],
@@ -211,7 +225,10 @@ class LaserScanVis:
     elif event.key == 'Z':
       import matplotlib.pyplot as plt
       # img_numpy = self.sem_vis.canvas.render(alpha=False)
-      img_numpy = _screenshot()
+      # print(img_numpy.shape)
+      # img = Image.fromarray(img_numpy)
+      # img.save("scan.png")
+      img_numpy = _screenshot(alpha=False)
       plt.imshow(img_numpy)
       plt.savefig("test.png", dpi=600)
   def draw(self, event):

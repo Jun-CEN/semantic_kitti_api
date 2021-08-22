@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import numpy as np
+from matplotlib import pyplot as plt
 
 
 class LaserScan:
@@ -215,6 +216,7 @@ class SemLaserScan(LaserScan):
                                     dtype=np.int32)              # [H,W]  label
     self.proj_inst_color = np.zeros((self.proj_H, self.proj_W, 3),
                                     dtype=np.float)              # [H,W,3] color
+    self.uncertainty_scores = None
 
   def open_label(self, filename):
     """ Open raw scan and fill in attributes
@@ -234,6 +236,32 @@ class SemLaserScan(LaserScan):
 
     # set it
     self.set_label(label)
+
+  def open_uncertainty(self, filename):
+    """ Open raw scan and fill in attributes
+    """
+    # check filename is string
+    if not isinstance(filename, str):
+      raise TypeError("Filename should be string type, "
+                      "but was {type}".format(type=str(type(filename))))
+
+    # check extension is a laserscan
+    if not any(filename.endswith(ext) for ext in self.EXTENSIONS_LABEL):
+      raise RuntimeError("Filename extension is not valid label file.")
+
+    # if all goes well, open label
+    uncertainty = np.fromfile(filename, dtype=np.float32)
+    uncertainty = uncertainty.reshape((-1))
+    print(filename)
+
+    self.uncertainty_scores = uncertainty
+    uncertainty_min = np.min(self.uncertainty_scores)
+    uncertainty_max = np.max(self.uncertainty_scores)
+    self.uncertainty_scores = (self.uncertainty_scores * 255).astype(np.uint8)
+    # self.uncertainty_scores = ((self.uncertainty_scores - uncertainty_min) / (uncertainty_max - uncertainty_min) * 255).astype(np.uint8)
+    for i in range(10):
+      print(i/10, np.sum(self.uncertainty_scores<i/10) / self.uncertainty_scores.shape[0])
+
 
   def set_label(self, label):
     """ Set points for label not from file but from np
@@ -266,6 +294,16 @@ class SemLaserScan(LaserScan):
     self.inst_label_color = self.inst_color_lut[self.inst_label]
     self.inst_label_color = self.inst_label_color.reshape((-1, 3))
 
+    # if self.uncertainty_scores is not None:
+    #   self.uncertainty_color = np.zeros((3, self.uncertainty_scores.shape[0]))
+    #   self.uncertainty_color[1] = 1 - self.uncertainty_scores
+    #   self.uncertainty_color[2] = self.uncertainty_scores
+    #   self.uncertainty_color = self.uncertainty_color.transpose(1,0)
+
+    if self.uncertainty_scores is not None:
+      viridis_map = self.get_mpl_colormap("viridis")
+      self.uncertainty_color = viridis_map[self.uncertainty_scores]
+
   def do_label_projection(self):
     # only map colors to labels that exist
     mask = self.proj_idx >= 0
@@ -277,3 +315,14 @@ class SemLaserScan(LaserScan):
     # instances
     self.proj_inst_label[mask] = self.inst_label[self.proj_idx[mask]]
     self.proj_inst_color[mask] = self.inst_color_lut[self.inst_label[self.proj_idx[mask]]]
+
+  def get_mpl_colormap(self, cmap_name):
+    cmap = plt.get_cmap(cmap_name)
+
+    # Initialize the matplotlib color map
+    sm = plt.cm.ScalarMappable(cmap=cmap)
+
+    # Obtain linear color range
+    color_range = sm.to_rgba(np.linspace(0, 1, 256), bytes=True)[:, 2::-1]
+
+    return color_range.reshape(256, 3).astype(np.float32) / 255.0

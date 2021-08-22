@@ -28,10 +28,14 @@ class iouEval:
                                  self.n_classes),
                                 dtype=np.int64)
 
-  def addBatch(self, x, y):  # x=preds, y=targets
+    self.unknown_labels = []
+    self.unknown_scores = []
+
+  def addBatch(self, x, y, z):  # x=preds, y=targets
     # sizes should be matching
     x_row = x.reshape(-1)  # de-batchify
     y_row = y.reshape(-1)  # de-batchify
+    z_row = z.reshape(-1)
 
     # check
     assert(x_row.shape == x_row.shape)
@@ -41,6 +45,9 @@ class iouEval:
 
     # make confusion matrix (cols = gt, rows = pred)
     np.add.at(self.conf_matrix, idxs, 1)
+
+    self.unknown_labels.append(y_row)
+    self.unknown_scores.append(z_row)
 
   def getStats(self):
     # remove fp from confusion on the ignore classes cols
@@ -70,6 +77,30 @@ class iouEval:
     
   def get_confusion(self):
     return self.conf_matrix.copy()
+
+  def get_unknown_indices(self):
+    self.unknown_labels = np.concatenate(self.unknown_labels)
+    self.unknown_scores = np.concatenate(self.unknown_scores)
+    self.unknown_labels[self.unknown_labels != 5] = 0
+    self.unknown_labels[self.unknown_labels == 5] = 1
+    assert(len(self.unknown_scores) == len(self.unknown_labels))
+
+    from sklearn.metrics import precision_recall_curve, auc, roc_curve, roc_auc_score
+
+    precision, recall, _ = precision_recall_curve(self.unknown_labels, self.unknown_scores)
+    aupr_score = auc(recall, precision)
+    print('AUPR is: ', aupr_score)
+
+    fpr, tpr, _ = roc_curve(self.unknown_labels, self.unknown_scores)
+    auroc_score_1 = auc(fpr, tpr)
+    # auroc_score_2 = roc_auc_score(self.unknown_labels, self.unknown_scores)
+    print('AUROC is: ', auroc_score_1)
+
+    print('FPR95 is: ', fpr[tpr > 0.95][0])
+
+
+
+
 
 
 

@@ -40,6 +40,16 @@ if __name__ == '__main__':
       'Defaults to %(default)s',
   )
   parser.add_argument(
+      '--uncertainty', '-u',
+      type=str,
+      default=None,
+      required=False,
+      help='Alternate location for labels, to use predictions folder. '
+           'Must point to directory containing the predictions in the proper format '
+           ' (see readme)'
+           'Defaults to %(default)s',
+  )
+  parser.add_argument(
       '--ignore_semantics', '-i',
       dest='ignore_semantics',
       default=False,
@@ -116,7 +126,7 @@ if __name__ == '__main__':
   if not FLAGS.ignore_semantics:
     if FLAGS.predictions is not None:
       label_paths = os.path.join(FLAGS.predictions, "sequences",
-                                 FLAGS.sequence, "predictions")
+                                 FLAGS.sequence, "predictions_18")
     else:
       label_paths = os.path.join(FLAGS.dataset, "sequences",
                                  FLAGS.sequence, "labels")
@@ -129,6 +139,15 @@ if __name__ == '__main__':
     label_names = [os.path.join(dp, f) for dp, dn, fn in os.walk(
         os.path.expanduser(label_paths)) for f in fn]
     label_names.sort()
+
+    if FLAGS.uncertainty is not None:
+        uncertainty_paths = os.path.join(FLAGS.uncertainty, "sequences",
+                                 FLAGS.sequence, "scores_softmax")
+        uncertainty_names = [os.path.join(dp, f) for dp, dn, fn in os.walk(
+            os.path.expanduser(uncertainty_paths)) for f in fn]
+        uncertainty_names.sort()
+    else:
+        uncertainty_names = None
 
     # check that there are same amount of labels and scans
     if not FLAGS.ignore_safety:
@@ -147,9 +166,11 @@ if __name__ == '__main__':
   instances = FLAGS.do_instances
   if not semantics:
     label_names = None
+
   vis = LaserScanVis(scan=scan,
                      scan_names=scan_names,
                      label_names=label_names,
+                     uncertainty_names=uncertainty_names,
                      offset=FLAGS.offset,
                      semantics=semantics, instances=instances and semantics)
 
