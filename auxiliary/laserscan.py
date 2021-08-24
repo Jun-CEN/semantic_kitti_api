@@ -259,8 +259,8 @@ class SemLaserScan(LaserScan):
     uncertainty_max = np.max(self.uncertainty_scores)
     self.uncertainty_scores = (self.uncertainty_scores * 255).astype(np.uint8)
     # self.uncertainty_scores = ((self.uncertainty_scores - uncertainty_min) / (uncertainty_max - uncertainty_min) * 255).astype(np.uint8)
-    for i in range(10):
-      print(i/10, np.sum(self.uncertainty_scores<i/10) / self.uncertainty_scores.shape[0])
+    # for i in range(10):
+    #   print(i/10, np.sum(self.uncertainty_scores<i/10) / self.uncertainty_scores.shape[0])
 
 
   def set_label(self, label):

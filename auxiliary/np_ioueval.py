@@ -81,6 +81,9 @@ class iouEval:
   def get_unknown_indices(self):
     self.unknown_labels = np.concatenate(self.unknown_labels)
     self.unknown_scores = np.concatenate(self.unknown_scores)
+    valid = self.unknown_labels != 0
+    self.unknown_labels = self.unknown_labels[valid]
+    self.unknown_scores = self.unknown_scores[valid]
     self.unknown_labels[self.unknown_labels != 5] = 0
     self.unknown_labels[self.unknown_labels == 5] = 1
     assert(len(self.unknown_scores) == len(self.unknown_labels))

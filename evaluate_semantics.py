@@ -155,7 +155,7 @@ if __name__ == '__main__':
   for sequence in test_sequences:
     sequence = '{0:02d}'.format(int(sequence))
     pred_paths = os.path.join(FLAGS.predictions, "sequences",
-                              sequence, "predictions_dummy_best")
+                              sequence, "predictions_no_dummy_best")
     # populate the label names
     seq_pred_names = [os.path.join(dp, f) for dp, dn, fn in os.walk(
         os.path.expanduser(pred_paths)) for f in fn if ".label" in f]
@@ -168,7 +168,7 @@ if __name__ == '__main__':
     for sequence in test_sequences:
         sequence = '{0:02d}'.format(int(sequence))
         scores_paths = os.path.join(FLAGS.predictions, "sequences",
-                                  sequence, "scores_softmax_dummy_best")
+                                  sequence, "scores_softmax_no_dummy_best")
         # populate the label names
         seq_scores_names = [os.path.join(dp, f) for dp, dn, fn in os.walk(
             os.path.expanduser(scores_paths)) for f in fn if ".label" in f]
