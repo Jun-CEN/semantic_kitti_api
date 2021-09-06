@@ -50,14 +50,14 @@ for each points in the dataset should be generated and saved as:
     ├──nuscenes_infos_val.pkl
     ├──nuscenes_infos_test.pkl
 └── predictions/        
-        ├── closed-set_prediction_results/	
-            ├── 000000.label
-            ├── 000001.label
-            └── ...
-        └── uncertainty_scores/ 
-            ├── 000000.score
-            ├── 000001.score
-            └── ...
+    ├── closed-set_prediction_results/	
+        ├── 000000.label
+        ├── 000001.label
+        └── ...
+    └── uncertainty_scores/ 
+        ├── 000000.score
+        ├── 000001.score
+        └── ...
 ```
 ## Evaluation
 ### SemanticKITTI
