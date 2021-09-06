@@ -132,7 +132,7 @@ learning_map:
   72: 17    # "terrain"
   80: 18    # "pole"
   81: 19    # "traffic-sign"
-  99: 0     # "other-object" to "unlabeled" ----------------------------mapped
+  99: 5     # "other-object" to "unlabeled" ----------------------------mapped
   252: 1    # "moving-car" to "car" ------------------------------------mapped
   253: 7    # "moving-bicyclist" to "bicyclist" ------------------------mapped
   254: 6    # "moving-person" to "person" ------------------------------mapped

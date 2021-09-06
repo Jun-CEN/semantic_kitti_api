@@ -155,7 +155,7 @@ if __name__ == '__main__':
   for sequence in test_sequences:
     sequence = '{0:02d}'.format(int(sequence))
     pred_paths = os.path.join(FLAGS.predictions, "sequences",
-                              sequence, "predictions_no_dummy_best")
+                              sequence, "predictions_naive")
     # populate the label names
     seq_pred_names = [os.path.join(dp, f) for dp, dn, fn in os.walk(
         os.path.expanduser(pred_paths)) for f in fn if ".label" in f]
@@ -168,7 +168,7 @@ if __name__ == '__main__':
     for sequence in test_sequences:
         sequence = '{0:02d}'.format(int(sequence))
         scores_paths = os.path.join(FLAGS.predictions, "sequences",
-                                  sequence, "scores_softmax_no_dummy_best")
+                                  sequence, "scores_logits_naive")
         # populate the label names
         seq_scores_names = [os.path.join(dp, f) for dp, dn, fn in os.walk(
             os.path.expanduser(scores_paths)) for f in fn if ".label" in f]
@@ -177,8 +177,8 @@ if __name__ == '__main__':
     # print(scores_names)
 
   # check that I have the same number of files
-  # print("labels: ", len(label_names))
-  # print("predictions: ", len(pred_names))
+  print("labels: ", len(label_names))
+  print("predictions: ", len(pred_names))
   assert(len(label_names) == len(pred_names))
   assert(len(label_names) == len(scores_names))
 
@@ -199,7 +199,9 @@ if __name__ == '__main__':
     label = label & 0xFFFF       # get lower half for semantics
     if FLAGS.limit is not None:
       label = label[:FLAGS.limit]  # limit to desired length
+    valid_index = label != 0
     label = remap_lut[label]       # remap to xentropy format
+    label = label[valid_index]
 
 
     # open prediction
@@ -209,13 +211,12 @@ if __name__ == '__main__':
     if FLAGS.limit is not None:
       pred = pred[:FLAGS.limit]  # limit to desired length
     pred = remap_lut[pred]       # remap to xentropy format
+    pred = pred[valid_index]
 
     # open uncertainty scores
     scores = np.fromfile(scores_file, dtype=np.float32)
     scores = scores.reshape((-1))  # reshape to vector
-    # pred = pred & 0xFFFF  # get lower half for semantics
-    # if FLAGS.limit is not None:
-    #     scores = scores[:FLAGS.limit]  # limit to desired length
+    scores = scores[valid_index]
 
     # add single scan to evaluation
     evaluator.addBatch(pred, label, scores)
@@ -223,7 +224,7 @@ if __name__ == '__main__':
   # when I am done, print the evaluation
   m_accuracy = evaluator.getacc()
   m_jaccard, class_jaccard = evaluator.getIoU()
-  print(evaluator.conf_matrix)
+  # print(evaluator.conf_matrix)
   evaluator.get_unknown_indices()
 
   print('Validation set:\n'

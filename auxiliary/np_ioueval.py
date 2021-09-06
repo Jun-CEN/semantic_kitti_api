@@ -45,7 +45,6 @@ class iouEval:
 
     # make confusion matrix (cols = gt, rows = pred)
     np.add.at(self.conf_matrix, idxs, 1)
-
     self.unknown_labels.append(y_row)
     self.unknown_scores.append(z_row)
 
@@ -87,6 +86,12 @@ class iouEval:
     self.unknown_labels[self.unknown_labels != 5] = 0
     self.unknown_labels[self.unknown_labels == 5] = 1
     assert(len(self.unknown_scores) == len(self.unknown_labels))
+
+    scores_distribution_ood = self.unknown_scores[self.unknown_labels == 1]
+    scores_distribution_in = self.unknown_scores[self.unknown_labels != 1]
+    # scores_distribution_ood.tofile('/harddisk/jcenaa/semantic_kitti/analyze/scores_softmax_3dummy_incre_latest_ood.score')
+    # scores_distribution_in.tofile('/harddisk/jcenaa/semantic_kitti/analyze/scores_softmax_3dummy_incre_latest_in.score')
+    # print('Save scores distribution successfully!')
 
     from sklearn.metrics import precision_recall_curve, auc, roc_curve, roc_auc_score
 

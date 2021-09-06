@@ -14,7 +14,7 @@ class LaserScanVis:
   """Class that creates and handles a visualizer for a pointcloud"""
 
   def __init__(self, scan, scan_names, label_names, uncertainty_names, offset=0,
-               semantics=True, instances=False):
+               semantics=True, instances=True):
     self.scan = scan
     self.scan_names = scan_names
     self.label_names = label_names
@@ -180,6 +180,7 @@ class LaserScanVis:
 
     # plot instances
     if self.instances:
+      self.inst_vis.antialias = 0
       self.inst_vis.set_data(self.scan.points,
                              face_color=self.scan.inst_label_color[..., ::-1],
                              edge_color=self.scan.inst_label_color[..., ::-1],

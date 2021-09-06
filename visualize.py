@@ -126,7 +126,7 @@ if __name__ == '__main__':
   if not FLAGS.ignore_semantics:
     if FLAGS.predictions is not None:
       label_paths = os.path.join(FLAGS.predictions, "sequences",
-                                 FLAGS.sequence, "predictions_dummy_best")
+                                 FLAGS.sequence, "predictions_1dummy_best")
     else:
       label_paths = os.path.join(FLAGS.dataset, "sequences",
                                  FLAGS.sequence, "labels")
@@ -142,7 +142,7 @@ if __name__ == '__main__':
 
     if FLAGS.uncertainty is not None:
         uncertainty_paths = os.path.join(FLAGS.uncertainty, "sequences",
-                                 FLAGS.sequence, "scores_softmax_dummy_best")
+                                 FLAGS.sequence, "scores_softmax_3dummy_0_1_3")
         uncertainty_names = [os.path.join(dp, f) for dp, dn, fn in os.walk(
             os.path.expanduser(uncertainty_paths)) for f in fn]
         uncertainty_names.sort()

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="45df848e-127e-4d57-af72-a20d3c2eb6ad" name="eez061">
+        <fileTransfer rootFolder="/data_shared/Docker/jcen" accessType="SFTP" host="eez061.ece.ust.hk" port="23333" sshConfigId="b097b918-079b-4881-b741-12158689b8f5" sshConfig="jcen@eez061.ece.ust.hk:23333 agent" authAgent="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+      <webServer id="ca4d549e-2834-4731-8727-ef2047ae0e63" name="eez120">
+        <fileTransfer accessType="SFTP" host="eez120.ece.ust.hk" port="22" sshConfigId="c5d87258-3614-4502-af32-49c5e5686bd4" sshConfig="jcenaa@eez120.ece.ust.hk:22 key" keyPair="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

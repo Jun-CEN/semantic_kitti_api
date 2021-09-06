@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 import numpy as np
 from matplotlib import pyplot as plt
+import torch
+from torch import nn
+from torch.autograd import Function
+import emd
 
 
 class LaserScan:
@@ -274,6 +278,8 @@ class SemLaserScan(LaserScan):
     if label.shape[0] == self.points.shape[0]:
       self.sem_label = label & 0xFFFF  # semantic label in lower half
       self.inst_label = label >> 16    # instance id in upper half
+      print(np.unique(self.sem_label, return_counts=True))
+      print(np.unique(self.inst_label, return_counts=True))
     else:
       print("Points shape: ", self.points.shape)
       print("Label shape: ", label.shape)
@@ -282,8 +288,12 @@ class SemLaserScan(LaserScan):
     # sanity check
     assert((self.sem_label + (self.inst_label << 16) == label).all())
 
-    if self.project:
-      self.do_label_projection()
+    # self.augmentor()
+
+
+
+    # if self.project:
+    #   self.do_label_projection()
 
   def colorize(self):
     """ Colorize pointcloud with the color of each semantic label
@@ -326,3 +336,152 @@ class SemLaserScan(LaserScan):
     color_range = sm.to_rgba(np.linspace(0, 1, 256), bytes=True)[:, 2::-1]
 
     return color_range.reshape(256, 3).astype(np.float32) / 255.0
+
+  def augmentor(self):
+    valid = self.sem_label != 20
+    self.sem_label_valid = self.sem_label[valid]
+    self.inst_label_valid = self.inst_label[valid]
+    self.points_valid = self.points[valid]
+
+    minimum_pts_thre = 100
+    cls, cnt = np.unique(self.inst_label_valid, return_counts=True)
+    inst_basic_idx = cls[cnt >= minimum_pts_thre][1:]
+
+    for instance_idx in inst_basic_idx:
+      obj_ins = self.points_valid[self.inst_label_valid == instance_idx]
+      obj_ins_center = np.mean(obj_ins, axis=0)
+      obj_ins = obj_ins - obj_ins_center
+      scale_ds_large = np.random.rand() * 1.5 + 1.5
+      scale_ds_small = np.random.rand() * 0.25 + 0.25
+      rnd = np.random.rand()
+      scale_ds = scale_ds_large if rnd > 0.5 else scale_ds_small
+      obj_ins = obj_ins * scale_ds + obj_ins_center
+      self.points_valid[self.inst_label_valid == instance_idx] = obj_ins
+      self.sem_label_valid[self.inst_label_valid == instance_idx] = 0
+
+    # inst_basic_num = cnt[cnt >= minimum_pts_thre][1:]
+    # index_perm = np.random.permutation(inst_basic_idx.shape[0])
+    # inst_basic_idx_perm = np.expand_dims(inst_basic_idx[index_perm], 0)
+    # inst_basic_num_perm = np.expand_dims(inst_basic_num[index_perm], 0)
+    # inst_basic_idx = np.expand_dims(inst_basic_idx, 0)
+    # inst_basic_num = np.expand_dims(inst_basic_num, 0)
+    # inst_num_pair = np.concatenate([inst_basic_num, inst_basic_num_perm], axis=0).transpose()
+    # inst_idx_pair = np.concatenate([inst_basic_idx, inst_basic_idx_perm], axis=0).transpose()
+    # min_pts_num_pair = np.min(inst_num_pair, axis=1)
+    # print(inst_num_pair)
+    #
+    # obj_aug = []
+    # idx_final = np.ones(self.points_valid.shape[0]).astype(np.bool_)
+    #
+    # for i in range(inst_idx_pair.shape[0]):
+    #   obj_1 = self.points_valid[self.inst_label_valid == inst_idx_pair[i,0]]
+    #   obj_2 = self.points_valid[self.inst_label_valid == inst_idx_pair[i,1]]
+    #   min_pts = min_pts_num_pair[i] if min_pts_num_pair[i] < 1024 else 1024
+    #   print(min_pts)
+    #   np.random.shuffle(obj_1)
+    #   obj_1 = obj_1[:min_pts]
+    #   np.random.shuffle(obj_2)
+    #   obj_2 = obj_2[:min_pts]
+    #   center_obj_1 = np.mean(obj_1, axis=0)
+    #   center_obj_2 = np.mean(obj_2, axis=0)
+    #   obj_1 = obj_1 - center_obj_1
+    #   obj_1_tmp = (obj_1 - np.min(obj_1, axis=0))/ (np.max(obj_1, axis=0) - np.min(obj_1, axis=0))
+    #   obj_2 = obj_2 - center_obj_2
+    #   obj_2_tmp = (obj_2 - np.min(obj_2, axis=0)) / (np.max(obj_2, axis=0) - np.min(obj_2, axis=0))
+    #   if obj_1.shape[0] < 1024:
+    #     obj_1_tmp = torch.from_numpy(np.concatenate([obj_1_tmp, np.zeros((1024-obj_1_tmp.shape[0],3))])).unsqueeze(0).cuda()
+    #     obj_2_tmp = torch.from_numpy(np.concatenate([obj_2_tmp, np.zeros((1024-obj_2_tmp.shape[0], 3))])).unsqueeze(0).cuda()
+    #     obj_1 = torch.from_numpy(np.concatenate([obj_1, np.zeros((1024 - obj_1.shape[0], 3))])).unsqueeze(
+    #       0).cuda()
+    #     obj_2 = torch.from_numpy(np.concatenate([obj_2, np.zeros((1024 - obj_2.shape[0], 3))])).unsqueeze(
+    #       0).cuda()
+    #   else:
+    #     obj_1_tmp = torch.from_numpy(obj_1_tmp).unsqueeze(0).cuda()
+    #     obj_2_tmp = torch.from_numpy(obj_2_tmp).unsqueeze(0).cuda()
+    #     obj_1 = torch.from_numpy(obj_1).unsqueeze(0).cuda()
+    #     obj_2 = torch.from_numpy(obj_2).unsqueeze(0).cuda()
+    #   print(obj_1.shape, obj_2.shape)
+    #   emd = emdModule()
+    #   dis, assigment = emd(obj_1_tmp, obj_2_tmp, 0.05, 3000)
+    #   print("|set(assignment)|: %d" % assigment.unique().numel())
+    #   assigment = assigment.cpu().numpy()
+    #   assigment = np.expand_dims(assigment, -1)
+    #   print(assigment.shape)
+    #   obj_2 = np.take_along_axis(obj_2, assigment, axis=1)
+    #   obj_compound = 2*(0.5*obj_1 + 0.5*obj_2) + torch.from_numpy(center_obj_1).cuda()
+    #   obj_compound = obj_compound.squeeze().cpu().numpy()
+    #   obj_aug.append(obj_compound)
+    #   idx_final[self.inst_label_valid == inst_idx_pair[i,0]] = 0
+    #
+    # self.points_valid = self.points_valid[idx_final]
+    # obj_aug = np.concatenate(obj_aug)
+    # print(obj_aug.shape)
+    # self.points_valid = np.concatenate([self.points_valid, obj_aug], axis=0)
+
+    self.set_points(points=self.points_valid)
+    self.sem_label = self.sem_label_valid
+    self.inst_label = self.inst_label_valid
+
+    # zeros_aux = np.zeros(obj_aug.shape[0]).astype(np.int)
+    #
+    # self.sem_label = self.sem_label_valid[idx_final]
+    # self.inst_label = self.inst_label_valid[idx_final]
+    #
+    # self.sem_label = np.concatenate([self.sem_label, zeros_aux])
+    # self.inst_label = np.concatenate([self.inst_label, zeros_aux])
+
+    # cls, cnt = np.unique(self.sem_label_valid, return_counts = True)
+    # print(cls, cnt)
+    # cls, cnt = np.unique(self.inst_label_valid, return_counts = True)
+    # print(cls, cnt)
+
+class emdFunction(Function):
+  @staticmethod
+  def forward(ctx, xyz1, xyz2, eps, iters):
+    batchsize, n, _ = xyz1.size()
+    _, m, _ = xyz2.size()
+
+    assert (n == m)
+    assert (xyz1.size()[0] == xyz2.size()[0])
+    assert (n % 1024 == 0)
+    assert (batchsize <= 512)
+
+    xyz1 = xyz1.contiguous().float().cuda()
+    xyz2 = xyz2.contiguous().float().cuda()
+    dist = torch.zeros(batchsize, n, device='cuda').contiguous()
+    assignment = torch.zeros(batchsize, n, device='cuda', dtype=torch.int32).contiguous() - 1
+    assignment_inv = torch.zeros(batchsize, m, device='cuda', dtype=torch.int32).contiguous() - 1
+    price = torch.zeros(batchsize, m, device='cuda').contiguous()
+    bid = torch.zeros(batchsize, n, device='cuda', dtype=torch.int32).contiguous()
+    bid_increments = torch.zeros(batchsize, n, device='cuda').contiguous()
+    max_increments = torch.zeros(batchsize, m, device='cuda').contiguous()
+    unass_idx = torch.zeros(batchsize * n, device='cuda', dtype=torch.int32).contiguous()
+    max_idx = torch.zeros(batchsize * m, device='cuda', dtype=torch.int32).contiguous()
+    unass_cnt = torch.zeros(512, dtype=torch.int32, device='cuda').contiguous()
+    unass_cnt_sum = torch.zeros(512, dtype=torch.int32, device='cuda').contiguous()
+    cnt_tmp = torch.zeros(512, dtype=torch.int32, device='cuda').contiguous()
+
+    emd.forward(xyz1, xyz2, dist, assignment, price, assignment_inv, bid, bid_increments, max_increments, unass_idx,
+                unass_cnt, unass_cnt_sum, cnt_tmp, max_idx, eps, iters)
+
+    ctx.save_for_backward(xyz1, xyz2, assignment)
+    return dist, assignment
+
+  @staticmethod
+  def backward(ctx, graddist, gradidx):
+    xyz1, xyz2, assignment = ctx.saved_tensors
+    graddist = graddist.contiguous()
+
+    gradxyz1 = torch.zeros(xyz1.size(), device='cuda').contiguous()
+    gradxyz2 = torch.zeros(xyz2.size(), device='cuda').contiguous()
+
+    emd.backward(xyz1, xyz2, gradxyz1, graddist, assignment)
+    return gradxyz1, gradxyz2, None, None
+
+
+class emdModule(nn.Module):
+  def __init__(self):
+    super(emdModule, self).__init__()
+
+  def forward(self, input1, input2, eps, iters):
+    return emdFunction.apply(input1, input2, eps, iters)

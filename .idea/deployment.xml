@@ -2,6 +2,20 @@
 <project version="4">
   <component name="PublishConfigData" autoUpload="On explicit save action" serverName="jcen@143.89.78.232:22 password" remoteFilesAllowedToDisappearOnAutoupload="false" autoUploadExternalChanges="true">
     <serverData>
+      <paths name="eez061">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/semantic_kitti_api" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="eez120">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/jcenaa/semantic_kitti_api" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
       <paths name="jcen@143.89.78.232:22 password">
         <serverdata>
           <mappings>
