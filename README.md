@@ -5,7 +5,7 @@ including AURP, AUROC, and FPR95 in this repository.
 
 To use this repository for calculating metrics, the closed-set prediction labels and uncertainty scores
 for each points in the dataset should be generated and saved as:
-###SemanticKITTI
+### SemanticKITTI
 ```
 ./
 ├── 
@@ -37,7 +37,7 @@ for each points in the dataset should be generated and saved as:
         |       ├── 000001.score
         |       └── ...
 ```
-###nuScenes
+### nuScenes
 ```
 ./
 ├── 
@@ -59,8 +59,8 @@ for each points in the dataset should be generated and saved as:
             ├── 000001.score
             └── ...
 ```
-##Evaluation
-###SemanticKITTI
+## Evaluation
+### SemanticKITTI
 - First, remap the closed-set prediction results to the non-entropy type, the path is determined
 in the `remap_semantic_label.sh` and line 74 of `remap_semantic_label.py`.
 ```
