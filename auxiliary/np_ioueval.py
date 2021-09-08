@@ -89,9 +89,9 @@ class iouEval:
 
     scores_distribution_ood = self.unknown_scores[self.unknown_labels == 1]
     scores_distribution_in = self.unknown_scores[self.unknown_labels != 1]
-    # scores_distribution_ood.tofile('/harddisk/jcenaa/semantic_kitti/analyze/scores_softmax_3dummy_incre_latest_ood.score')
-    # scores_distribution_in.tofile('/harddisk/jcenaa/semantic_kitti/analyze/scores_softmax_3dummy_incre_latest_in.score')
-    # print('Save scores distribution successfully!')
+    scores_distribution_ood.tofile('/harddisk/jcenaa/semantic_kitti/analyze/scores_softmax_3dummy_base_ood.score')
+    scores_distribution_in.tofile('/harddisk/jcenaa/semantic_kitti/analyze/scores_softmax_3dummy_base_in.score')
+    print('Save scores distribution successfully!')
 
     from sklearn.metrics import precision_recall_curve, auc, roc_curve, roc_auc_score
 

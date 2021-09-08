@@ -168,7 +168,7 @@ if __name__ == '__main__':
     for sequence in test_sequences:
         sequence = '{0:02d}'.format(int(sequence))
         scores_paths = os.path.join(FLAGS.predictions, "sequences",
-                                  sequence, "scores_logits_naive")
+                                  sequence, "scores_softmax_naive")
         # populate the label names
         seq_scores_names = [os.path.join(dp, f) for dp, dn, fn in os.walk(
             os.path.expanduser(scores_paths)) for f in fn if ".label" in f]

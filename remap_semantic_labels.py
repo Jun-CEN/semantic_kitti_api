@@ -71,7 +71,7 @@ if __name__ == '__main__':
     label_directory = "labels"
   elif(FLAGS.predictions is not None):
     root_directory = FLAGS.predictions
-    label_directory = "predictions_naive"
+    label_directory = "predictions_1dummy_1_01_final"
   else:
     print("I don't even know how I got here")
     quit()

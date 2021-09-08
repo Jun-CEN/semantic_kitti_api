@@ -1,4 +1,4 @@
-# Open-world metrics calculation for SemanticKITTI and nuScenes
+# Open-world metrics calculation for SemanticKITTI
 
 We modify the official SemanticKITTI api to calculate the closed-set mIoU and open-set metrics
 including AURP, AUROC, and FPR95 in this repository.
@@ -37,28 +37,7 @@ for each points in the dataset should be generated and saved as:
         |       ├── 000001.score
         |       └── ...
 ```
-### nuScenes
-```
-./
-├── 
-├── ...
-└── lidarseg/
-    ├──v1.0-trainval/
-    ├──v1.0-mini/
-    ├──v1.0-test/
-    ├──nuscenes_infos_train.pkl
-    ├──nuscenes_infos_val.pkl
-    ├──nuscenes_infos_test.pkl
-└── predictions/        
-    ├── closed-set_prediction_results/	
-        ├── 000000.label
-        ├── 000001.label
-        └── ...
-    └── uncertainty_scores/ 
-        ├── 000000.score
-        ├── 000001.score
-        └── ...
-```
+
 ## Evaluation
 ### SemanticKITTI
 - First, remap the closed-set prediction results to the non-entropy type, the path is determined
@@ -75,8 +54,8 @@ AUROC, and FPR95. The path is determined in the `evalute_semantics.sh` and line 
 ```
 ********************************************************************************
 INTERFACE:
-Data:  /harddisk/jcenaa/semantic_kitti/dataset
-Predictions:  /harddisk/jcenaa/semantic_kitti/predictions
+Data:  /harddisk/semantic_kitti/dataset
+Predictions:  /harddisk/semantic_kitti/predictions
 Backend:  numpy
 Split:  valid
 Config:  config/semantic-kitti.yaml
